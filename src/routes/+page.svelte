@@ -1,6 +1,10 @@
 <script>
     let { data } = $props();
 
+    let displayed = $state('');
+    let done = $state(false);
+    const text = 'Hello, I\'m Xtimate';
+
     const gradients = [
         "bg-gradient-to-br from-[#1a0040] to-[#0a0020]",
         "bg-gradient-to-tr from-[#2d0060] to-[#0d0030]",
@@ -18,37 +22,53 @@
         "bg-gradient-to-bl from-[#220048] to-[#09001c]",
         "bg-gradient-to-r from-[#300062] to-[#110028]",
     ];
-
+    $effect(() => {
+      console.log('effect running')
+      let i = 0
+      const interval = setInterval(() => {
+        displayed = displayed + text[i]
+        i++
+        if (i >= text.length) {
+          clearInterval(interval)
+          done = true
+        }
+      }, 80)
+    })
     const getGradient = (id) => gradients[id % gradients.length];
 </script>
 
 <main>
-    <h1 class="text-white text-4xl font-bold flex justify-center">
+    <h1 class="text-white text-5xl font-bold flex justify-center pt-5">
         Xtimate.tech
     </h1>
-    <div class="flex flex-wrap gap-4 justify-center">
-        {#each data.repos as repo (repo.id)}
-            <div
-                class="{getGradient(
-                    repo.id,
-                )} repo-card text-white bg-gradient-to-br rounded-2xl border border-slate-400/30 hover:border-purple-500/40 p-3 w-80"
-            >
-                <a href={repo.html_url} target="_blank" rel="noreferrer"
-                    >{repo.name}</a
-                >
-                <h2>{repo.language}</h2>
-                <i class="devicon-{repo.language?.toLowerCase()}-plain"></i>
-                <p>{repo.description || "No description"}</p>
-                <a
-                    href={repo.html_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    class="text-blue-400">View on GitHub</a
-                >
-                <span class="text-white/60 text-sm"
-                    >⭐ {repo.stargazers_count}</span
-                >
-            </div>
-        {/each}
+    <div class="text-white flex justify-center gap-1 pt-5">
+        <span>></span>
+        <h1 class="flex justify-center gap-1">{displayed}
+            <span class="cursor-blink text-white">▌</span>
+        </h1>
     </div>
+    {#if done}
+        <div class="flex flex-wrap gap-4 justify-center pt-6">
+            {#each data.repos as repo, index (repo.id)}
+                <div
+                    class="{getGradient(
+                        repo.id,
+                    )} animate-fade-up opacity-0 repo-card text-white bg-gradient-to-br rounded-2xl border border-slate-400/30 hover:border-purple-500/40 p-3 w-80 transition-transform duration-300 hover:scale-105 hover:shadow-lg hover:shadow-purple-500/20"
+                    style="animation-delay: {0.4 + index * 0.8}s"
+                >
+                    <a class="no-underline hover:underline" href={repo.html_url} target="_blank" rel="noreferrer"
+                        >{repo.name}</a
+                    >
+                    <div class="flex items-center gap-2 pt-3">
+                        <h2>{repo.language}</h2>
+                        <i class="devicon-{repo.language?.toLowerCase()}-plain"></i>
+                    </div>
+                    <p>{repo.description || "No description"}</p>
+                    <span class="text-white/60 text-sm"
+                        >⭐ {repo.stargazers_count}</span
+                    >
+                </div>
+            {/each}
+        </div>
+    {/if}
 </main>
