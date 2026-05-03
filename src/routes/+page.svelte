@@ -35,6 +35,36 @@
       }, 80)
     })
     const getGradient = (id) => gradients[id % gradients.length];
+
+    function tilt(node) {
+      node.style.transition = 'transform 0.05s ease'
+      const handleMove = (e) => {
+        node.style.transition = 'transform 0.05s ease'
+        const rect = node.getBoundingClientRect()
+        const x = e.clientX - rect.left
+        const y = e.clientY - rect.top
+        const centerX = rect.width / 2
+        const centerY = rect.height / 2
+        const rotateX = ((y - centerY) / centerY) * -10
+        const rotateY = ((x - centerX) / centerX) * 10
+        node.style.transform = `perspective(600px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.05)`
+      }
+
+      const handleLeave = () => {
+        node.style.transition = 'transform 0.3s ease'
+        node.style.transform = 'perspective(600px) rotateX(0deg) rotateY(0deg) scale(1)'
+      }
+
+      node.addEventListener('mousemove', handleMove)
+      node.addEventListener('mouseleave', handleLeave)
+
+      return {
+        destroy() {
+          node.removeEventListener('mousemove', handleMove)
+          node.removeEventListener('mouseleave', handleLeave)
+        }
+      }
+    }
 </script>
 
 <main>
@@ -50,23 +80,23 @@
     {#if done}
         <div class="flex flex-wrap gap-4 justify-center pt-6">
             {#each data.repos as repo, index (repo.id)}
-                <div
-                    class="{getGradient(
-                        repo.id,
-                    )} animate-fade-up opacity-0 repo-card text-white bg-gradient-to-br rounded-2xl border border-slate-400/30 hover:border-purple-500/40 p-3 w-80 transition-transform duration-300 hover:scale-105 hover:shadow-lg hover:shadow-purple-500/20"
-                    style="animation-delay: {0.4 + index * 0.8}s"
-                >
-                    <a class="no-underline hover:underline" href={repo.html_url} target="_blank" rel="noreferrer"
-                        >{repo.name}</a
+                <div class="animate-fade-up opacity-0" style="animation-delay: {0.4 + index * 0.8}s">
+                    <div
+                        use:tilt
+                        class="{getGradient(
+                            repo.id,
+                        )} repo-card text-white bg-gradient-to-br rounded-2xl border border-slate-400/30 hover:border-purple-500/40 p-3 w-80 transition-transform duration-300 hover:scale-105 hover:shadow-lg hover:shadow-purple-500/20"
+                        style="animation-delay: {0.4 + index * 0.8}s"
                     >
-                    <div class="flex items-center gap-2 pt-3">
-                        <h2>{repo.language}</h2>
-                        <i class="devicon-{repo.language?.toLowerCase()}-plain"></i>
+                        <div class="flex items-center gap-2 pt-3">
+                            <h2>{repo.language}</h2>
+                            <i class="devicon-{repo.language?.toLowerCase()}-plain"></i>
+                        </div>
+                        <p>{repo.description || "No description"}</p>
+                        <span class="text-white/60 text-sm"
+                            >⭐ {repo.stargazers_count}</span
+                        >
                     </div>
-                    <p>{repo.description || "No description"}</p>
-                    <span class="text-white/60 text-sm"
-                        >⭐ {repo.stargazers_count}</span
-                    >
                 </div>
             {/each}
         </div>
