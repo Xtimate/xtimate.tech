@@ -1,6 +1,12 @@
 import client from "$lib/db.js";
+import { redirect } from "@sveltejs/kit";
 
-export async function load({ fetch }) {
+const PASSWORD = "Peren_123";
+
+export async function load({ fetch, cookies }) {
+  const auth = cookies.get("admin_auth");
+  if (auth !== PASSWORD) throw redirect(303, "/admin/login");
+
   const repoRes = await fetch("api/github");
   const repos = await repoRes.json();
 

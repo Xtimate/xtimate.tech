@@ -3,6 +3,7 @@
 
     let title = $state("");
     let content = $state("");
+    let password = $state("");
 
     const pinnedNames = $derived(data.pinned.map((p) => p.repo_name));
 
