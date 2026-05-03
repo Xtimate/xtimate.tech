@@ -71,3 +71,8 @@ main {
             transparent
         );
 }
+input,
+textarea {
+    color: white;
+    -webkit-text-fill-color: white;
+}
