@@ -88,6 +88,14 @@
                         )} repo-card text-white bg-gradient-to-br rounded-2xl border border-slate-400/30 hover:border-purple-500/40 p-3 w-80 transition-transform duration-300 hover:scale-105 hover:shadow-lg hover:shadow-purple-500/20"
                         style="animation-delay: {0.4 + index * 0.8}s"
                     >
+                        <a
+                          class="text-white font-bold text-lg hover:text-purple-300 transition-colors duration-200"
+                          href={repo.html_url}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {repo.name}
+                        </a>
                         <div class="flex items-center gap-2 pt-3">
                             <h2>{repo.language}</h2>
                             <i class="devicon-{repo.language?.toLowerCase()}-plain"></i>
@@ -100,5 +108,25 @@
                 </div>
             {/each}
         </div>
+        <div class="opacity-0 p-10 animate-fade-up" style="animation-delay: 2s;">
+            <div class="{getGradient(12)} p-5 border border-slate-400/30 rounded-2xl">
+                <p class="text-white">Hello, I'm Xtimate. I am a teenage developer from the Netherlands. I primarily build machine learning systems and my focus is making functional apps that actually have a real life application.</p>
+                <p class="text-white mt-3">I code because I find that this is a nice way for me to be artistic in a way; I've never been good with a pencil and paper and coding gives me the freedom to express myself creatively.</p>
+                <p class="text-white/70 text-sm mt-3">Currently learning SvelteKit and full-stack development.</p>
+                <div class="flex flex-wrap gap-2 mt-4">
+                  {#each [
+                    { name: 'Python', icon: 'python' },
+                    { name: 'JavaScript', icon: 'javascript' },
+                    { name: 'SvelteKit', icon: 'svelte' },
+                  ] as skill (skill.name)}
+                    <span class="bg-purple-500/20 border border-purple-500/40 text-purple-300 text-sm px-3 py-1 rounded-full flex items-center gap-2">
+                      <i class="devicon-{skill.icon}-plain"></i>
+                      {skill.name}
+                    </span>
+                  {/each}
+                </div>
+            </div>
+        </div>
     {/if}
+
 </main>
