@@ -3,8 +3,15 @@
 
     let displayed = $state("");
     let done = $state(false);
-    const text = "Hello, I'm Xtimate";
     let activePost = $state(null);
+
+    const getGreeting = () => {
+        const hour = new Date().getHours();
+        if (hour < 12) return "Good morning, I'm Xtimate  ";
+        if (hour < 18) return "Good afternoon, I'm Xtimate  ";
+        return "Good evening, I'm Xtimate";
+    };
+    const text = getGreeting();
 
     const gradients = [
         "bg-gradient-to-br from-[#1a0040] to-[#0a0020]",
@@ -35,7 +42,16 @@
             }
         }, 80);
     });
+    let contactDelay = $derived(4.8 + data.posts.length * 0.8);
     const getGradient = (id) => gradients[id % gradients.length];
+
+    let copied = $state(false);
+
+    const copyDiscord = () => {
+        navigator.clipboard.writeText(".xtimate");
+        copied = true;
+        setTimeout(() => (copied = false), 2000);
+    };
 
     function tilt(node) {
         node.style.transition = "transform 0.05s ease";
@@ -81,11 +97,15 @@
         </h1>
     </div>
     {#if done}
-        <div class="flex flex-wrap gap-4 justify-center pt-6">
+        <div
+            class="opacity-0 w-3/4 mx-auto border-t-2 border-purple-500/20 my-8 animate-fade-up"
+            style="animation-delay: 0.2s;"
+        ></div>
+        <div class="flex flex-wrap gap-4 justify-center">
             {#each data.repos as repo, index (repo.id)}
                 <div
                     class="animate-fade-up opacity-0"
-                    style="animation-delay: {0.4 + index * 0.8}s"
+                    style="animation-delay: {0.8 + index * 0.8}s"
                 >
                     <div
                         use:tilt
@@ -117,8 +137,12 @@
             {/each}
         </div>
         <div
-            class="opacity-0 p-10 animate-fade-up"
-            style="animation-delay: 2s;"
+            class="opacity-0 w-3/4 mx-auto border-t-2 border-purple-500/20 my-8 animate-fade-up"
+            style="animation-delay: 2.4s;"
+        ></div>
+        <div
+            class="opacity-0 px-10 animate-fade-up"
+            style="animation-delay: 3.2s;"
         >
             <div
                 class="{getGradient(
@@ -152,11 +176,15 @@
                 </div>
             </div>
         </div>
-        <div class="flex flex-wrap gap-4 justify-center pt-6">
+        <div
+            class="opacity-0 w-3/4 mx-auto border-t-2 border-purple-500/20 my-8 animate-fade-up"
+            style="animation-delay: 4s;"
+        ></div>
+        <div class="flex flex-wrap gap-4 justify-center">
             {#each data.posts as post, index (post.id)}
                 <div
                     class="animate-fade-up opacity-0"
-                    style="animation-delay: {2.8 + index * 0.8}s"
+                    style="animation-delay: {4.8 + index * 0.8}s"
                 >
                     <button
                         onclick={() => (activePost = post)}
@@ -172,6 +200,49 @@
                     </button>
                 </div>
             {/each}
+        </div>
+        <div
+            class="opacity-0 w-3/4 mx-auto border-t-2 border-purple-500/20 my-8 animate-fade-up"
+            style="animation-delay: {contactDelay}s;"
+        ></div>
+        <div
+            class="animate-fade-up flex justify-center opacity-0 px-10 pb-10"
+            style="animation-delay: {0.8 + contactDelay}s"
+        >
+            <div
+                class="{getGradient(
+                    7,
+                )} p-5 border border-slate-400/30 rounded-2xl"
+            >
+                <h2 class="text-white font-bold text-lg mb-4">Contact</h2>
+                <div class="flex gap-4">
+                    <a
+                        href="https://github.com/Xtimate"
+                        target="_blank"
+                        rel="noreferrer"
+                        class="flex items-center gap-2 bg-purple-500/20 border border-purple-500/40 text-purple-300 text-sm px-3 py-2 rounded-full hover:bg-purple-500/40 transition-colors duration-200"
+                    >
+                        <i class="devicon-github-original"></i>
+                        GitHub
+                    </a>
+                    <button
+                        onclick={() =>
+                            navigator.clipboard.writeText(".xtimate")}
+                        class="flex items-center gap-2 bg-purple-500/20 border border-purple-500/40 text-purple-300 text-sm px-3 py-2 rounded-full hover:bg-purple-500/40 transition-colors duration-200"
+                    >
+                        <svg
+                            class="w-4 h-4"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                        >
+                            <path
+                                d="M19.27 5.33C17.94 4.71 16.5 4.26 15 4a.09.09 0 0 0-.07.03c-.18.33-.39.76-.53 1.09a16.09 16.09 0 0 0-4.8 0c-.14-.34-.35-.76-.54-1.09c-.01-.02-.04-.03-.07-.03c-1.5.26-2.93.71-4.27 1.33c-.01 0-.02.01-.03.02c-2.72 4.07-3.47 8.03-3.1 11.95c0 .02.01.04.03.05c1.8 1.32 3.53 2.12 5.24 2.65c.03.01.06 0 .07-.02c.4-.55.76-1.13 1.07-1.74c.02-.04 0-.08-.04-.09c-.57-.22-1.11-.48-1.64-.78c-.04-.02-.04-.08-.01-.11c.11-.08.22-.17.33-.25c.02-.02.05-.02.07-.01c3.44 1.57 7.15 1.57 10.55 0c.02-.01.05-.01.07.01c.11.09.22.17.33.26c.04.03.04.09-.01.11c-.52.31-1.07.56-1.64.78c-.04.01-.05.06-.04.09c.32.61.68 1.19 1.07 1.74c.03.02.06.03.09.02c1.72-.53 3.45-1.33 5.25-2.65c.02-.01.03-.03.03-.05c.44-4.53-.73-8.46-3.1-11.95c-.01-.01-.02-.02-.04-.02zM8.52 14.91c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12c0 1.17-.84 2.12-1.89 2.12zm6.97 0c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12c0 1.17-.83 2.12-1.89 2.12z"
+                            />
+                        </svg>
+                        {copied ? "Copied!" : "Discord"}
+                    </button>
+                </div>
+            </div>
         </div>
     {/if}
 </main>
