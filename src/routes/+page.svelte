@@ -172,7 +172,13 @@
                 style="animation-delay: 0.2s;"
             ></div>
             <div class="flex flex-wrap gap-4 justify-center">
-                {#each data.repos as repo, index (repo.id)}
+                {#each data.taggedRepos as repo, index (repo.id)}
+                    <div class="relative animate-fade-up opacity-0" style="animation-delay: {0.4 + index * 0.8}s">
+                        {#if repo.isNowBuilding}
+                        <div class="absolute top-2 right-2 bg-purple-500/20 border border-purple-500/40 text-purple-300 text-sm px-2 py-1 rounded-full flex items-center gap-1">
+                            <span>Now building</span>
+                        </div>
+                        {/if}
                     <div
                         class="animate-fade-up opacity-0"
                         style="animation-delay: {0.8 + index * 0.8}s"
@@ -204,8 +210,9 @@
                             >
                         </div>
                     </div>
-                {/each}
-            </div>
+                </div>
+            {/each}
+        </div>
             <div
                 class="opacity-0 w-3/4 mx-auto border-t-2 border-purple-500/20 my-8 animate-fade-up"
                 style="animation-delay: 2.4s;"
