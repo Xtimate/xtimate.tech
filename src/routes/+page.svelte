@@ -2,7 +2,7 @@
     import { tick } from "svelte";
     let { data } = $props();
     let totalStars = $derived(
-        data.repos.reduce((sum, repo) => sum + repo.stargazers_count, 0),
+        data.taggedRepos.reduce((sum, repo) => sum + repo.stargazers_count, 0),
     );
     let displayed = $state("");
     let done = $state(false);
@@ -25,7 +25,7 @@
     let mostUsedLanguage = $derived(
         (() => {
             const counts = {};
-            data.repos.forEach((repo) => {
+            data.taggedRepos.forEach((repo) => {
                 if (repo.language)
                     counts[repo.language] = (counts[repo.language] || 0) + 1;
             });
@@ -36,7 +36,7 @@
         })(),
     );
 
-    let totalRepos = $derived(data.repos.length);
+    let totalRepos = $derived(data.taggedRepos.length);
 
     const gradients = [
         "bg-gradient-to-br from-[#1a0040] to-[#0a0020]",
@@ -67,6 +67,37 @@
             }
         }, 80);
     });
+
+    const languageBreakdown = $derived(
+      Object.entries(
+        data.taggedRepos
+          .filter(repo => repo.language)
+          .reduce((acc, repo) => {
+            acc[repo.language] = (acc[repo.language] || 0) + 1;
+            return acc;
+          }, {})
+      ).sort((a, b) => b[1] - a[1])
+    );
+
+    const lastActive = $derived(
+      (() => {
+        const mostRecent = data.taggedRepos.find(repo => repo.isNowBuilding)
+        if (!mostRecent) return "unknown"
+
+        const diff = Date.now() - new Date(mostRecent.updated_at).getTime()
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+
+        if (days > 0) return `${days}d ${hours}h ${minutes}m ago`
+        if (hours > 0) return `${hours}h ${minutes}m ago`
+        return `${minutes}m ago`
+      })()
+    )
+
+    const totalForks = $derived(
+      data.taggedRepos.reduce((sum, repo) => sum + repo.forks_count, 0)
+    )
 
     $effect(() => {
         if (!pillEl || !homeEl || !statsEl) return;
@@ -174,11 +205,6 @@
             <div class="flex flex-wrap gap-4 justify-center">
                 {#each data.taggedRepos as repo, index (repo.id)}
                     <div class="relative animate-fade-up opacity-0" style="animation-delay: {0.4 + index * 0.8}s">
-                        {#if repo.isNowBuilding}
-                        <div class="absolute top-2 right-2 bg-purple-500/20 border border-purple-500/40 text-purple-300 text-sm px-2 py-1 rounded-full flex items-center gap-1">
-                            <span>Now building</span>
-                        </div>
-                        {/if}
                     <div
                         class="animate-fade-up opacity-0"
                         style="animation-delay: {0.8 + index * 0.8}s"
@@ -190,6 +216,14 @@
                             )} repo-card text-white bg-gradient-to-br rounded-2xl border border-slate-400/30 hover:border-purple-500/40 p-3 w-80 transition-transform duration-300 hover:scale-105 hover:shadow-lg hover:shadow-purple-500/20"
                             style="animation-delay: {0.4 + index * 0.8}s"
                         >
+                            {#if repo.isNowBuilding}
+                            <div
+                                class="opacity-0 z-10 animate-fade-up absolute top-3 right-3 bg-purple-500/20 border border-purple-500/40 text-purple-300 text-sm px-2 py-1 rounded-2xl flex items-center gap-1"
+                                style="animation-delay: {0.8 + index * 0.8}s"
+                            >
+                                <span>Now building</span>
+                            </div>
+                            {/if}
                             <a
                                 class="text-white font-bold text-lg hover:text-purple-300 transition-colors duration-200"
                                 href={repo.html_url}
@@ -326,43 +360,31 @@
     {/if}
     {#if activeTab === "stats"}
         <div
-            class="{getGradient(
-                5,
-            )} mt-4 animate-fade-up opacity-0 flex flex-wrap mx-auto w-fit rounded-2xl border border-slate-400/30"
+            class="{getGradient(5)} mt-4 animate-fade-up opacity-0 rounded-2xl border border-slate-400/30 px-8 py-6 w-3/4 mx-auto"
         >
-            <div
-                class="animate-fade-up opacity-0 flex justify-center gap-6 px-4 py-4"
-                style="animation-delay: 0.3s"
-            >
-                <div
-                    class="{getGradient(
-                        3,
-                    )} p-4 border border-slate-400/30 rounded-2xl text-center min-w-24"
-                >
-                    <p class="text-purple-300 text-2xl font-bold">
-                        {totalRepos}
-                    </p>
+            <div class="flex flex-wrap justify-center gap-4">
+                <div class="p-4 rounded-2xl text-center min-w-32">
+                    <p class="text-purple-300 text-2xl font-bold">{totalRepos}</p>
                     <p class="text-white/60 text-sm">Repos</p>
                 </div>
-                <div
-                    class="{getGradient(
-                        5,
-                    )} p-4 border border-slate-400/30 rounded-2xl text-center min-w-24"
-                >
-                    <p class="text-purple-300 text-2xl font-bold">
-                        {totalStars}
-                    </p>
+                <div class="p-4 rounded-2xl text-center min-w-32">
+                    <p class="text-purple-300 text-2xl font-bold">{totalStars}</p>
                     <p class="text-white/60 text-sm">Stars</p>
                 </div>
-                <div
-                    class="{getGradient(
-                        9,
-                    )} p-4 border border-slate-400/30 rounded-2xl text-center min-w-24"
-                >
-                    <p class="text-purple-300 text-2xl font-bold">
-                        {mostUsedLanguage}
-                    </p>
-                    <p class="text-white/60 text-sm">Top Language</p>
+                <div class="p-4 rounded-2xl text-center min-w-32">
+                    <div class="flex flex-wrap justify-center gap-1">
+                        {#each languageBreakdown as [lang] (lang)}
+                            <span class="text-purple-300 text-2xl font-bold">{lang}</span>
+                        {/each}
+                    </div>
+                    <p class="text-white/60 text-sm mt-1">Top Languages</p>
+                </div>
+                <div class="p-4 rounded-2xl text-center min-w-32">
+                    <p class="text-purple-300 text-2xl font-bold">{lastActive}</p>
+                    <p class="text-white/60 text-sm">Last active</p>
+                </div>
+                <div>
+
                 </div>
             </div>
         </div>
