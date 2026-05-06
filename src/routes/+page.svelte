@@ -1,5 +1,5 @@
 <script>
-    import { tick } from "svelte";
+    import { tick, onMount } from "svelte";
     let { data } = $props();
     let totalStars = $derived(
         data.taggedRepos.reduce((sum, repo) => sum + repo.stargazers_count, 0),
@@ -9,7 +9,8 @@
     let activePost = $state(null);
     let activeTab = $state("home");
     let pillEl;
-    let homeEl;
+    let homeEl
+    let hackatime = $state(null)
     let statsEl;
     const switchTab = (tab) => {
         activeTab = tab;
@@ -22,19 +23,7 @@
     };
     const text = getGreeting();
 
-    let mostUsedLanguage = $derived(
-        (() => {
-            const counts = {};
-            data.taggedRepos.forEach((repo) => {
-                if (repo.language)
-                    counts[repo.language] = (counts[repo.language] || 0) + 1;
-            });
-            return (
-                Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] ||
-                "N/A"
-            );
-        })(),
-    );
+
 
     let totalRepos = $derived(data.taggedRepos.length);
 
@@ -98,6 +87,18 @@
     const totalForks = $derived(
       data.taggedRepos.reduce((sum, repo) => sum + repo.forks_count, 0)
     )
+
+    async function fetchHackatime() {
+     const res = await fetch("/api/hackatime")
+     hackatime = await res.json()
+     console.log("hackatime", hackatime)
+    }
+
+    onMount(() => {
+      fetchHackatime()
+      const interval = setInterval(fetchHackatime, 60000)
+      return () => clearInterval(interval)
+    })
 
     $effect(() => {
         if (!pillEl || !homeEl || !statsEl) return;
@@ -269,7 +270,7 @@
                     <p class="text-white mt-3">
                         I code because I find that this is a nice way for me to
                         be artistic in a way; I've never been good with a pencil
-                        and paper and coding gives me the freedom to express
+                        and paper and coding gives me the oppertunity to express
                         myself creatively.
                     </p>
                     <p class="text-white/70 text-sm mt-3">
@@ -379,15 +380,41 @@
                     </div>
                     <p class="text-white/60 text-sm mt-1">Top Languages</p>
                 </div>
-                <div class="p-4 rounded-2xl text-center min-w-32">
-                    <p class="text-purple-300 text-2xl font-bold">{lastActive}</p>
-                    <p class="text-white/60 text-sm">Last active</p>
-                </div>
-                <div>
-
+                <div
+                    class="opacity-0 w-3/4 mx-auto border-t-2 border-purple-500/20 my-2 animate-fade-up"
+                    style="animation-delay: .1s;"
+                ></div>
+            {#if hackatime}
+                    <div class="py-2 px-4 rounded-2xl text-center min-w-32">
+                        <div class="text-purple-300 text-2xl font-bold">{hackatime.today}</div>
+                        <p class="text-white/60 text-sm">Time coded today</p>
+                    </div>
+                    <div class="py-2 px-4 rounded-2xl text-center min-w-32">
+                        <div class="text-purple-300 text-2xl font-bold">{hackatime.allTime}</div>
+                        <p class="text-white/60 text-sm">All time</p>
+                    </div>
+                    <div class="py-2 px-4 rounded-2xl text-center min-w-32">
+                        <div class="text-purple-300 text-2xl font-bold">{hackatime.streak} 🔥</div>
+                        <p class="text-white/60 text-sm">Current streak</p>
+                    </div>
+                    {#if hackatime.currentFile}
+                    <div class="p-4 rounded-2xl text-center min-w-32">
+                        <p class="text-purple-300 text-2xl font-bold">{hackatime.currentRelativePath}</p>
+                        <p class="text-white/60 text-sm">Currently working on</p>
+                    </div>
+                    <div class="p-4 rounded-2xl text-center min-w-32">
+                        <p class="text-purple-300 text-2xl font-bold">{hackatime.currentLanguage}</p>
+                        <p class="text-white/60 text-sm">Current language</p>
+                    </div>
+                    {/if}
+                    {:else}
+                    <div class="p-4 rounded-2xl text-center min-w-32">
+                        <p class="text-purple-300 text-2xl font-bold">{lastActive}</p>
+                        <p class="text-white/60 text-sm">Last active</p>
+                    </div>
+                    {/if}
                 </div>
             </div>
-        </div>
     {/if}
 </main>
 

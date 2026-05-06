@@ -23,12 +23,23 @@ export async function GET() {
   )
   const streakMatch = html.match(/Streak:\s*([\d]+)\s*days/)
 
+  const entity = heartbeat.heartbeat?.entity ?? null
+  const currentFile = entity?.split('/').pop() ?? null
+  const project = heartbeat.heartbeat?.project ?? null
+  const currentLanguage = heartbeat.heartbeat?.language ?? null
+
+  const marker = project + '/'
+  const idx = entity.lastIndexOf(marker)
+  const currentRelativePath =
+    idx !== -1 ? entity.slice(idx + marker.length) : null
+
   return json({
     today: today.data.grand_total.text,
     allTime: allTimeMatch?.[1] ?? 'N/A',
     streak: streakMatch?.[1] ?? 'N/A',
-    currentFile: heartbeat.heartbeat?.entity?.split('/').pop() ?? null,
-    currentProject: heartbeat.heartbeat?.project ?? null,
-    currentLanguage: heartbeat.heartbeat?.language ?? null,
+    currentFile: currentFile ?? null,
+    currentProject: project ?? null,
+    currentLanguage: currentLanguage ?? null,
+    currentRelativePath: currentRelativePath ?? null,
   })
 }
