@@ -12,6 +12,7 @@
     let homeEl
     let hackatime = $state(null)
     let statsEl;
+    let viewCounts = $state({});
     const switchTab = (tab) => {
         konamiActivated = false;
         activeTab = tab;
@@ -111,9 +112,22 @@
      console.log("hackatime", hackatime)
     }
 
+    async function fetchAndIncrementView(repo_name) {
+      const res = await fetch(`/api/views/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ repo_name })
+      })
+      const { count } = await res.json()
+      viewCounts = { ...viewCounts, [repo_name]: count}
+    }
+
     onMount(() => {
       fetchHackatime()
       const interval = setInterval(fetchHackatime, 60000)
+
+      data.taggedRepos.forEach(repo => fetchAndIncrementView(repo.name))
+
       return () => clearInterval(interval)
     })
 
@@ -206,10 +220,14 @@
         </div>
     </div>
     {#if konamiActivated}
-    <div class="{getGradient(5)} fixed inset-0 w-full h-full z-50 items-center justify-center">
-        <button class="text-purple-300 text-sm" onclick={() => switchTab("home")}>Go back to homepage</button>
-        <p class="text-purple-300">Congratulations! You found the easter egg!</p>
-        <p class="text-purple-300 text-sm">Now hire me.</p>
+    <div class="{getGradient(5)} fixed inset-0 w-full h-full z-50 flex items-center justify-center">
+        <div class="{getGradient(9)} flex-wrap w-fit p-3 rounded-2xl border border-1 border-color-slate-400/30 justify-center items-center">
+            <button class="text-purple-300 text-sm" onclick={() => switchTab("home")}>Go back to homepage</button>
+        </div>
+        <div class="flex flex-col p-3">
+            <p class="text-purple-300">Congratulations! You found my secret page!</p>
+            <p class="text-purple-300 text-sm">Now hire me.</p>
+        </div>
     </div>
     {/if}
     {#if activeTab === "home"}
@@ -265,9 +283,20 @@
                                 ></i>
                             </div>
                             <p>{repo.description || "No description"}</p>
-                            <span class="text-white/60 text-sm"
-                                >⭐ {repo.stargazers_count}</span
-                            >
+                            <div class="flex items-center gap-3 mt-1">
+                                <span class="flex items-center gap-1 text-white/60 text-xs">
+                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                                    </svg>
+                                    {repo.stargazers_count}
+                                </span>
+                                <span class="flex items-center gap-1 text-white/60 text-xs">
+                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zm0 12.5c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                                    </svg>
+                                    {viewCounts[repo.name] ?? 0}
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>

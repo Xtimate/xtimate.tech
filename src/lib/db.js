@@ -21,4 +21,11 @@ await client.execute(`
   )
 `)
 
+await client.execute(`
+  CREATE TABLE IF NOT EXISTS views (
+    repo_name TEXT PRIMARY KEY,
+    count INTEGER DEFAULT 0
+  )
+  `)
+
 export default client
