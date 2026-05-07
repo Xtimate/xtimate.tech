@@ -13,6 +13,7 @@
     let hackatime = $state(null)
     let statsEl;
     const switchTab = (tab) => {
+        konamiActivated = false;
         activeTab = tab;
     };
     const getGreeting = () => {
@@ -23,7 +24,23 @@
     };
     const text = getGreeting();
 
+    const konamiCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a']
+    let konamiIndex = $state(0)
+    let konamiActivated = $state(false)
 
+    function handleKeydown(e) {
+      console.log('key:', e.key, 'index:', konamiIndex)
+      if (e.key === konamiCode[konamiIndex]) {
+        konamiIndex = konamiIndex + 1
+        if (konamiIndex === konamiCode.length) {
+          console.log('konami activated')
+          konamiActivated = true
+          konamiIndex = 0
+        }
+      } else {
+        konamiIndex = 0
+      }
+    }
 
     let totalRepos = $derived(data.taggedRepos.length);
 
@@ -138,6 +155,7 @@
             node.style.transform = `perspective(600px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.05)`;
         };
 
+
         const handleLeave = () => {
             node.style.transition = "transform 0.3s ease";
             node.style.transform =
@@ -155,7 +173,7 @@
         };
     }
 </script>
-
+<svelte:window on:keydown={handleKeydown} />
 <main>
     <div class="relative flex justify-center gap-2 pt-4">
         <div
@@ -187,6 +205,13 @@
             ></div>
         </div>
     </div>
+    {#if konamiActivated}
+    <div class="{getGradient(5)} fixed inset-0 w-full h-full z-50 items-center justify-center">
+        <button class="text-purple-300 text-sm" onclick={() => switchTab("home")}>Go back to homepage</button>
+        <p class="text-purple-300">Congratulations! You found the easter egg!</p>
+        <p class="text-purple-300 text-sm">Now hire me.</p>
+    </div>
+    {/if}
     {#if activeTab === "home"}
         <h1 class="text-white text-5xl font-bold flex justify-center pt-5">
             Xtimate.tech
@@ -385,18 +410,24 @@
                     style="animation-delay: .1s;"
                 ></div>
             {#if hackatime}
+                    {#if hackatime.today}
                     <div class="py-2 px-4 rounded-2xl text-center min-w-32">
                         <div class="text-purple-300 text-2xl font-bold">{hackatime.today}</div>
                         <p class="text-white/60 text-sm">Time coded today</p>
                     </div>
+                    {/if}
+                    {#if hackatime.allTime}
                     <div class="py-2 px-4 rounded-2xl text-center min-w-32">
                         <div class="text-purple-300 text-2xl font-bold">{hackatime.allTime}</div>
                         <p class="text-white/60 text-sm">All time</p>
                     </div>
+                    {/if}
+                    {#if hackatime.streak}
                     <div class="py-2 px-4 rounded-2xl text-center min-w-32">
                         <div class="text-purple-300 text-2xl font-bold">{hackatime.streak} 🔥</div>
                         <p class="text-white/60 text-sm">Current streak</p>
                     </div>
+                    {/if}
                     {#if hackatime.currentFile}
                     <div class="p-4 rounded-2xl text-center min-w-32">
                         <p class="text-purple-300 text-2xl font-bold">{hackatime.currentRelativePath}</p>
