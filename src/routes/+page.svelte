@@ -13,6 +13,12 @@
     let hackatime = $state(null)
     let statsEl;
     let viewCounts = $state({});
+    let guestbook = $state([])
+    let guestName = $state('')
+    let guestMessage = $state('')
+    let guestSubmitting = $state(false)
+    let hackatimeExpanded = $state(false)
+
     const switchTab = (tab) => {
         konamiActivated = false;
         activeTab = tab;
@@ -122,12 +128,30 @@
       viewCounts = { ...viewCounts, [repo_name]: count}
     }
 
+    async function fetchGuestbook() {
+      const res = await fetch("/api/guestbook")
+      guestbook = await res.json()
+    }
+
+    async function submitGuest() {
+      if (!guestName.trim() || !guestMessage.trim()) return
+      guestSubmitting = true
+      await fetch("/api/guestbook", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: guestName, message: guestMessage })
+      })
+      guestName = ''
+      guestMessage = ''
+      guestSubmitting = false
+      await fetchGuestbook()
+    }
+
     onMount(() => {
       fetchHackatime()
       const interval = setInterval(fetchHackatime, 60000)
-
       data.taggedRepos.forEach(repo => fetchAndIncrementView(repo.name))
-
+      fetchGuestbook()
       return () => clearInterval(interval)
     })
 
@@ -371,6 +395,49 @@
             </div>
             <div
                 class="opacity-0 w-3/4 mx-auto border-t-2 border-purple-500/20 my-8 animate-fade-up"
+                style="animation-delay: {1.6 + contactDelay}s;"
+            ></div>
+            <div
+                class="animate-fade-up opacity-0 px-10 pb-10"
+                style="animation-delay: {1.6 + contactDelay}s"
+            >
+                <div class="{getGradient(3)} p-5 border border-slate-400/30 rounded-2xl">
+                    <h2 class="text-white font-bold text-lg mb-4">Guestbook</h2>
+                    <div class="flex flex-col gap-2 mb-4">
+                        <input
+                            bind:value={guestName}
+                            placeholder="Your name"
+                            class="bg-purple-500/10 border border-purple-500/30 text-white placeholder-white/30 rounded-lg px-3 py-2 text-sm outline-none focus:border-purple-500/60"
+                        />
+                        <textarea
+                            bind:value={guestMessage}
+                            placeholder="Leave a message..."
+                            rows="3"
+                            class="bg-purple-500/10 border border-purple-500/30 text-white placeholder-white/30 rounded-lg px-3 py-2 text-sm outline-none focus:border-purple-500/60 resize-none"
+                        ></textarea>
+                        <button
+                            onclick={submitGuest}
+                            disabled={guestSubmitting}
+                            class="self-start bg-purple-500/20 border border-purple-500/40 text-purple-300 text-sm px-4 py-2 rounded-full hover:bg-purple-500/40 transition-colors duration-200 disabled:opacity-50"
+                        >
+                            {guestSubmitting ? 'Signing...' : 'Sign guestbook'}
+                        </button>
+                    </div>
+                    <div class="flex flex-col gap-3 mt-4">
+                        {#each guestbook as entry (entry.id)}
+                            <div class="bg-purple-500/10 border border-purple-500/20 rounded-xl px-4 py-3">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-purple-300 text-sm font-bold">{entry.name}</span>
+                                    <span class="text-white/40 text-xs">{entry.created_at}</span>
+                                </div>
+                                <p class="text-white/80 text-sm">{entry.message}</p>
+                            </div>
+                        {/each}
+                    </div>
+                </div>
+            </div>
+            <div
+                class="opacity-0 w-3/4 mx-auto border-t-2 border-purple-500/20 my-8 animate-fade-up"
                 style="animation-delay: {contactDelay}s;"
             ></div>
             <div
@@ -417,7 +484,7 @@
         <div
             class="{getGradient(5)} mt-4 animate-fade-up opacity-0 rounded-2xl border border-slate-400/30 px-8 py-6 w-3/4 mx-auto"
         >
-            <div class="flex flex-wrap justify-center gap-4">
+            <div class="flex flex-wrap justify-center items-end gap-4">
                 <div class="p-4 rounded-2xl text-center min-w-32">
                     <p class="text-purple-300 text-2xl font-bold">{totalRepos}</p>
                     <p class="text-white/60 text-sm">Repos</p>
@@ -427,15 +494,18 @@
                     <p class="text-white/60 text-sm">Stars</p>
                 </div>
                 <div class="p-4 rounded-2xl text-center min-w-32">
-                    <div class="flex flex-wrap justify-center gap-1">
+                    <div class="h-9 flex flex-wrap justify-center items-center gap-2">
                         {#each languageBreakdown as [lang] (lang)}
-                            <span class="text-purple-300 text-2xl font-bold">{lang}</span>
+                            <div class="flex items-center gap-1">
+                                <i class="devicon-{lang.toLowerCase()}-plain text-purple-300"></i>
+                                <span class="text-purple-300 text-sm">{lang}</span>
+                            </div>
                         {/each}
                     </div>
-                    <p class="text-white/60 text-sm mt-1">Top Languages</p>
+                    <p class="text-white/60 text-sm">Top Languages</p>
                 </div>
                 <div
-                    class="opacity-0 w-3/4 mx-auto border-t-2 border-purple-500/20 my-2 animate-fade-up"
+                    class="opacity-0 w-3/4 mx-auto border-t-2 border-purple-500/10 my-2 animate-fade-up"
                     style="animation-delay: .1s;"
                 ></div>
             {#if hackatime}
@@ -453,18 +523,46 @@
                     {/if}
                     {#if hackatime.streak}
                     <div class="py-2 px-4 rounded-2xl text-center min-w-32">
-                        <div class="text-purple-300 text-2xl font-bold">{hackatime.streak} 🔥</div>
+                        <div class="flex items-center justify-center gap-2">
+                            <div class="text-purple-300 text-2xl font-bold">{hackatime.streak}</div>
+                            <svg class="w-5 h-5 text-purple-300" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M13.5 0.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5 0.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z"/>
+                            </svg>
+                        </div>
                         <p class="text-white/60 text-sm">Current streak</p>
                     </div>
                     {/if}
                     {#if hackatime.currentFile}
-                    <div class="p-4 rounded-2xl text-center min-w-32">
-                        <p class="text-purple-300 text-2xl font-bold">{hackatime.currentRelativePath}</p>
-                        <p class="text-white/60 text-sm">Currently working on</p>
-                    </div>
-                    <div class="p-4 rounded-2xl text-center min-w-32">
-                        <p class="text-purple-300 text-2xl font-bold">{hackatime.currentLanguage}</p>
-                        <p class="text-white/60 text-sm">Current language</p>
+                    <div class="p-4 rounded-2xl min-w-32 w-full">
+                        <button
+                            onclick={() => hackatimeExpanded = !hackatimeExpanded}
+                            class="flex items-center justify-center w-full text-left"
+                        >
+                            <div class="text-center">
+                                <p class="text-purple-300 text-2xl font-bold">{hackatime.currentProject}</p>
+                                <p class="text-white/60 text-sm">Currently working on</p>
+                            </div>
+                            <svg
+                                class="w-4 h-4 text-purple-300 transition-transform duration-300 {hackatimeExpanded ? 'rotate-180' : ''}"
+                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                            >
+                                <path d="M6 9l6 6 6-6"/>
+                            </svg>
+                        </button>
+                        <div
+                            class="overflow-hidden transition-all duration-300 ease-in-out {hackatimeExpanded ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}"
+                        >
+                            <div class="mt-3 pt-3 border-t border-purple-500/20 flex flex-col items-center justify-center gap-4">
+                                <div class="flex gap-2">
+                                    <span class="text-purple-300 font-bold text-xl">File:</span>
+                                    <span class="text-white/60 text-xl">{hackatime.currentRelativePath}</span>
+                                </div>
+                                <div class="flex gap-2">
+                                    <span class="text-purple-300 font-bold text-xl">Language:</span>
+                                    <span class="text-white/60 text-xl">{hackatime.currentLanguage}</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     {/if}
                     {:else}

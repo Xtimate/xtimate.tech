@@ -27,5 +27,13 @@ await client.execute(`
     count INTEGER DEFAULT 0
   )
   `)
+await client.execute(`
+  CREATE TABLE IF NOT EXISTS guestbook (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    message TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now'))
+  )
+`)
 
 export default client
